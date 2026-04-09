@@ -1,0 +1,19 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.Python
+
+# Environment — never commit this, it has your secrets
+.env
+
+# Alembic
+alembic/versions/*.pyc
+
+# Mac
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
