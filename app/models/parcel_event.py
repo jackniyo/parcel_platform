@@ -16,3 +16,4 @@ class ParcelEvent(Base):
     created_at   = Column(DateTime(timezone=True), server_default=func.now())
 
     parcel       = relationship("Parcel", back_populates="events")
+    actor  = relationship("Agent", foreign_keys=[actor_id])
