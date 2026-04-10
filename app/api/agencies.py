@@ -1,8 +1,8 @@
 # app/api/agencies.py
-import uuid
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
 from typing import List
+import uuid
+from fastapi import APIRouter, Depends, HTTPException, Response 
+from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.models import Agency
@@ -49,3 +49,17 @@ def deactivate_agency(agency_id: str, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(agency)
     return agency
+
+@router.delete("/{agency_id}", status_code=204)
+def delete_agency(agency_id: str, db: Session = Depends(get_db)):
+    """Permanently delete an agency."""
+    agency = db.query(Agency).filter(Agency.id == agency_id).first()
+    
+    if not agency:
+        raise HTTPException(status_code=404, detail="Agency not found")
+    
+    db.delete(agency)
+    db.commit()
+    
+    # 204 No Content is the standard response for a successful deletion
+    return Response(status_code=204)

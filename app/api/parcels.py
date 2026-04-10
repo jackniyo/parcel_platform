@@ -1,6 +1,7 @@
 # app/api/parcels.py
+from urllib import response
 import uuid
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 from typing import List, Optional
 
@@ -32,9 +33,17 @@ def create_parcel(payload: ParcelCreate, db: Session = Depends(get_db)):
         if not trip:
             raise HTTPException(status_code=404, detail="Trip not found")
 
-    parcel = Parcel(id=str(uuid.uuid4()), **payload.model_dump())
+    data = payload.model_dump()
+    if data.get('status'):
+        data['status'] = payload.status.value  # ensure plain string, not enum member
+    from sqlalchemy.exc import IntegrityError
+    parcel = Parcel(id=str(uuid.uuid4()), **data)
     db.add(parcel)
-    db.flush()   # get parcel.id before creating the event
+    try:
+        db.flush()   # get parcel.id before creating the event
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail=f"Tracking code {payload.tracking_code} is already registered")
 
     # automatically log a "registered" event when a parcel is created
     event = ParcelEvent(
@@ -142,3 +151,20 @@ def list_parcel_events(parcel_id: str, db: Session = Depends(get_db)):
     if not parcel:
         raise HTTPException(status_code=404, detail="Parcel not found")
     return parcel.events
+
+
+@router.delete("/{parcel_id}", status_code=204)
+def delete_parcel(parcel_id: str, db: Session = Depends(get_db)):
+    """Permanently delete a parcel and its event history."""
+    parcel = db.query(Parcel).filter(Parcel.id == parcel_id).first()
+    
+    if not parcel:
+        raise HTTPException(status_code=404, detail="Parcel not found")
+    
+    # Optional: Manually delete events if cascade is not set in the Model
+    db.query(ParcelEvent).filter(ParcelEvent.parcel_id == parcel_id).delete()
+    
+    db.delete(parcel)
+    db.commit()
+    
+    return Response(status_code=204)

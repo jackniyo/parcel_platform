@@ -1,6 +1,6 @@
 # app/api/trips.py
 import uuid
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response 
 from sqlalchemy.orm import Session
 from typing import List, Optional
 
@@ -44,3 +44,16 @@ def get_trip(trip_id: str, db: Session = Depends(get_db)):
     if not trip:
         raise HTTPException(status_code=404, detail="Trip not found")
     return trip
+
+@router.delete("/{trip_id}", status_code=204)
+def delete_trip(trip_id: str, db: Session = Depends(get_db)):
+    """Permanently delete a trip."""
+    trip = db.query(Trip).filter(Trip.id == trip_id).first()
+    
+    if not trip:
+        raise HTTPException(status_code=404, detail="Trip not found")
+    
+    db.delete(trip)
+    db.commit()
+    
+    return Response(status_code=204)

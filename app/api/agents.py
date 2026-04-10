@@ -1,6 +1,6 @@
 # app/api/agents.py
 import uuid
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response 
 from sqlalchemy.orm import Session
 from typing import List, Optional
 
@@ -18,9 +18,16 @@ def create_agent(payload: AgentCreate, db: Session = Depends(get_db)):
     agency = db.query(Agency).filter(Agency.id == payload.agency_id).first()
     if not agency:
         raise HTTPException(status_code=404, detail="Agency not found")
-    agent = Agent(id=str(uuid.uuid4()), **payload.model_dump())
+    from sqlalchemy.exc import IntegrityError
+    data = payload.model_dump()
+    data['role'] = payload.role.value  # ensure plain string, not enum member
+    agent = Agent(id=str(uuid.uuid4()), **data)
     db.add(agent)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail=f"Phone number {payload.phone} is already registered")
     db.refresh(agent)
     return agent
 
@@ -62,3 +69,16 @@ def deactivate_agent(agent_id: str, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(agent)
     return agent
+
+@router.delete("/{agent_id}", status_code=204)
+def delete_agent(agent_id: str, db: Session = Depends(get_db)):
+    """Permanently delete an agent."""
+    agent = db.query(Agent).filter(Agent.id == agent_id).first()
+    
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agent not found")
+    
+    db.delete(agent)
+    db.commit()
+    
+    return Response(status_code=204)

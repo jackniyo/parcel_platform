@@ -18,7 +18,7 @@ class Parcel(Base):
     __tablename__ = "parcels"
 
     id                  = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    tracking_code       = Column(String(20), unique=True, nullable=False, index=True)
+    tracking_code       = Column(String(100), unique=True, nullable=False, index=True)
     sender_phone        = Column(String(20), nullable=False)
     receiver_phone      = Column(String(20), nullable=False)
     description         = Column(String(200))
