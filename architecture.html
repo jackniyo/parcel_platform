@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Parcel Platform – Architecture</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; padding: 32px; color: #1a202c; }
+    h1 { text-align: center; font-size: 22px; margin-bottom: 8px; color: #2d3748; }
+    .subtitle { text-align: center; color: #718096; font-size: 14px; margin-bottom: 36px; }
+
+    .flow { display: flex; flex-direction: column; align-items: center; gap: 0; }
+
+    /* ── CLIENT ── */
+    .client {
+      background: #ebf8ff; border: 2px solid #63b3ed; border-radius: 12px;
+      padding: 14px 32px; font-weight: 700; font-size: 15px; color: #2b6cb0;
+      text-align: center;
+    }
+    .client .eg { font-size: 12px; font-weight: 400; color: #4299e1; margin-top: 4px; }
+
+    /* ── ARROW ── */
+    .arrow { display: flex; flex-direction: column; align-items: center; margin: 2px 0; }
+    .arrow-line { width: 2px; height: 28px; background: #a0aec0; }
+    .arrow-head { width: 0; height: 0; border-left: 7px solid transparent; border-right: 7px solid transparent; border-top: 10px solid #a0aec0; }
+    .arrow-label { font-size: 11px; color: #718096; margin: 2px 0; }
+
+    /* ── MAIN.PY ── */
+    .main-box {
+      background: #fff; border: 2px solid #48bb78; border-radius: 12px;
+      padding: 16px 24px; width: 560px; text-align: center;
+    }
+    .main-box .title { font-weight: 700; font-size: 15px; color: #276749; margin-bottom: 6px; }
+    .main-box .file { font-size: 12px; color: #38a169; font-family: monospace; margin-bottom: 10px; }
+    .main-box .desc { font-size: 12px; color: #4a5568; }
+    .include-list { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
+    .include-chip {
+      background: #f0fff4; border: 1px solid #9ae6b4; border-radius: 6px;
+      padding: 4px 10px; font-size: 11px; color: #276749; font-family: monospace;
+    }
+
+    /* ── ROUTERS ROW ── */
+    .routers-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; width: 720px; }
+    .router-box {
+      background: #fff; border: 2px solid #f6ad55; border-radius: 10px;
+      padding: 12px 14px; width: 162px;
+    }
+    .router-box .r-title { font-weight: 700; font-size: 13px; color: #c05621; margin-bottom: 4px; }
+    .router-box .r-file  { font-size: 10px; color: #dd6b20; font-family: monospace; margin-bottom: 8px; }
+    .router-box .r-prefix { font-size: 10px; color: #744210; background: #fffaf0; border: 1px solid #fbd38d; border-radius: 4px; padding: 2px 6px; margin-bottom: 8px; display: inline-block; font-family: monospace; }
+    .route { font-size: 10px; color: #4a5568; padding: 2px 0; display: flex; align-items: center; gap: 4px; }
+    .method { font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 3px; font-family: monospace; min-width: 36px; text-align: center; }
+    .get    { background: #ebf8ff; color: #2b6cb0; }
+    .post   { background: #f0fff4; color: #276749; }
+    .patch  { background: #fef3c7; color: #92400e; }
+
+    /* ── SCHEMAS ROW ── */
+    .schemas-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; width: 720px; }
+    .schema-box {
+      background: #fff; border: 2px solid #b794f4; border-radius: 10px;
+      padding: 10px 12px; width: 130px;
+    }
+    .schema-box .s-title { font-weight: 700; font-size: 12px; color: #553c9a; margin-bottom: 4px; }
+    .schema-box .s-file  { font-size: 9px; color: #805ad5; font-family: monospace; margin-bottom: 6px; }
+    .schema-item { font-size: 10px; color: #4a5568; padding: 1px 0; font-family: monospace; }
+    .schema-arrow { font-size: 10px; color: #a0aec0; }
+
+    /* ── MODELS ROW ── */
+    .models-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; width: 720px; }
+    .model-box {
+      background: #fff; border: 2px solid #fc8181; border-radius: 10px;
+      padding: 10px 12px; width: 128px;
+    }
+    .model-box .m-title { font-weight: 700; font-size: 12px; color: #c53030; margin-bottom: 4px; }
+    .model-box .m-file  { font-size: 9px; color: #e53e3e; font-family: monospace; margin-bottom: 6px; }
+    .model-item { font-size: 10px; color: #4a5568; padding: 1px 0; }
+
+    /* ── DATABASE ── */
+    .db-row { display: flex; gap: 20px; justify-content: center; align-items: stretch; }
+    .db-box {
+      background: #fff; border: 2px solid #667eea; border-radius: 10px;
+      padding: 14px 20px; text-align: center;
+    }
+    .db-box .d-title { font-weight: 700; font-size: 13px; color: #434190; margin-bottom: 4px; }
+    .db-box .d-file  { font-size: 10px; color: #667eea; font-family: monospace; margin-bottom: 6px; }
+    .db-box .d-item  { font-size: 10px; color: #4a5568; padding: 1px 0; font-family: monospace; }
+
+    /* ── DOCS ── */
+    .docs-box {
+      background: #fff; border: 2px solid #81e6d9; border-radius: 10px;
+      padding: 14px 20px; text-align: center;
+    }
+    .docs-box .doc-title { font-weight: 700; font-size: 13px; color: #234e52; margin-bottom: 4px; }
+    .docs-box .doc-url { font-size: 10px; color: #319795; font-family: monospace; padding: 1px 0; }
+
+    /* ── SECTION LABELS ── */
+    .section-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: #a0aec0; margin-bottom: 6px; margin-top: 4px;
+      text-align: center;
+    }
+
+    /* ── LEGEND ── */
+    .legend { display: flex; gap: 20px; justify-content: center; margin-top: 28px; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #4a5568; }
+    .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<h1>Parcel Platform — How Everything Connects</h1>
+<p class="subtitle">From an HTTP request to the database and back</p>
+
+<div class="flow">
+
+  <!-- CLIENT -->
+  <div class="client">
+    🌐 Client (Browser / Postman / Mobile App)
+    <div class="eg">e.g. POST http://localhost:8000/parcels/</div>
+  </div>
+
+  <div class="arrow">
+    <div class="arrow-label">HTTP Request</div>
+    <div class="arrow-line"></div>
+    <div class="arrow-head"></div>
+  </div>
+
+  <!-- MAIN.PY -->
+  <div class="section-label">Entry Point</div>
+  <div class="main-box">
+    <div class="title">🚀 main.py</div>
+    <div class="file">FastAPI app — receives ALL requests</div>
+    <div class="desc">Registers every router with <code>app.include_router()</code></div>
+    <div class="include-list">
+      <div class="include-chip">agencies.router</div>
+      <div class="include-chip">agents.router</div>
+      <div class="include-chip">trips.router</div>
+      <div class="include-chip">parcels.router</div>
+    </div>
+  </div>
+
+  <div class="arrow">
+    <div class="arrow-label">matches prefix → forwards to correct router</div>
+    <div class="arrow-line"></div>
+    <div class="arrow-head"></div>
+  </div>
+
+  <!-- ROUTERS -->
+  <div class="section-label">Routers — app/api/</div>
+  <div class="routers-row">
+
+    <div class="router-box">
+      <div class="r-title">Agencies</div>
+      <div class="r-file">agencies.py</div>
+      <div class="r-prefix">prefix: /agencies</div>
+      <div class="route"><span class="method post">POST</span> /</div>
+      <div class="route"><span class="method get">GET</span> /</div>
+      <div class="route"><span class="method get">GET</span> /{id}</div>
+      <div class="route"><span class="method patch">PATCH</span> /{id}/deactivate</div>
+    </div>
+
+    <div class="router-box">
+      <div class="r-title">Agents</div>
+      <div class="r-file">agents.py</div>
+      <div class="r-prefix">prefix: /agents</div>
+      <div class="route"><span class="method post">POST</span> /</div>
+      <div class="route"><span class="method get">GET</span> /</div>
+      <div class="route"><span class="method get">GET</span> /{id}</div>
+      <div class="route"><span class="method patch">PATCH</span> /{id}/deactivate</div>
+    </div>
+
+    <div class="router-box">
+      <div class="r-title">Trips</div>
+      <div class="r-file">trips.py</div>
+      <div class="r-prefix">prefix: /trips</div>
+      <div class="route"><span class="method post">POST</span> /</div>
+      <div class="route"><span class="method get">GET</span> /</div>
+      <div class="route"><span class="method get">GET</span> /{id}</div>
+    </div>
+
+    <div class="router-box">
+      <div class="r-title">Parcels</div>
+      <div class="r-file">parcels.py</div>
+      <div class="r-prefix">prefix: /parcels</div>
+      <div class="route"><span class="method post">POST</span> /</div>
+      <div class="route"><span class="method get">GET</span> /</div>
+      <div class="route"><span class="method get">GET</span> /track/{code}</div>
+      <div class="route"><span class="method get">GET</span> /{id}</div>
+      <div class="route"><span class="method patch">PATCH</span> /{id}/status</div>
+      <div class="route"><span class="method post">POST</span> /{id}/events</div>
+      <div class="route"><span class="method get">GET</span> /{id}/events</div>
+    </div>
+
+  </div>
+
+  <div class="arrow">
+    <div class="arrow-label">validates request body &amp; query params using schemas</div>
+    <div class="arrow-line"></div>
+    <div class="arrow-head"></div>
+  </div>
+
+  <!-- SCHEMAS -->
+  <div class="section-label">Schemas (Pydantic) — app/schemas/</div>
+  <div class="schemas-row">
+    <div class="schema-box">
+      <div class="s-title">Agency</div>
+      <div class="s-file">agency.py</div>
+      <div class="schema-item">AgencyCreate</div>
+      <div class="schema-arrow">↓</div>
+      <div class="schema-item">AgencyResponse</div>
+    </div>
+    <div class="schema-box">
+      <div class="s-title">Agent</div>
+      <div class="s-file">agent.py</div>
+      <div class="schema-item">AgentCreate</div>
+      <div class="schema-arrow">↓</div>
+      <div class="schema-item">AgentResponse</div>
+    </div>
+    <div class="schema-box">
+      <div class="s-title">Trip</div>
+      <div class="s-file">trip.py</div>
+      <div class="schema-item">TripCreate</div>
+      <div class="schema-arrow">↓</div>
+      <div class="schema-item">TripResponse</div>
+    </div>
+    <div class="schema-box">
+      <div class="s-title">Parcel</div>
+      <div class="s-file">parcel.py</div>
+      <div class="schema-item">ParcelCreate</div>
+      <div class="schema-arrow">↓</div>
+      <div class="schema-item">ParcelResponse</div>
+    </div>
+    <div class="schema-box">
+      <div class="s-title">ParcelEvent</div>
+      <div class="s-file">parcel_event.py</div>
+      <div class="schema-item">EventCreate</div>
+      <div class="schema-arrow">↓</div>
+      <div class="schema-item">EventResponse</div>
+    </div>
+  </div>
+
+  <div class="arrow">
+    <div class="arrow-label">reads &amp; writes using SQLAlchemy models</div>
+    <div class="arrow-line"></div>
+    <div class="arrow-head"></div>
+  </div>
+
+  <!-- MODELS -->
+  <div class="section-label">Models (SQLAlchemy) — app/models/</div>
+  <div class="models-row">
+    <div class="model-box">
+      <div class="m-title">Agency</div>
+      <div class="m-file">agency.py</div>
+      <div class="model-item">id, name</div>
+      <div class="model-item">contact_phone</div>
+      <div class="model-item">active, created_at</div>
+    </div>
+    <div class="model-box">
+      <div class="m-title">Agent</div>
+      <div class="m-file">agent.py</div>
+      <div class="model-item">id, name, phone</div>
+      <div class="model-item">role, agency_id</div>
+      <div class="model-item">location, district</div>
+    </div>
+    <div class="model-box">
+      <div class="m-title">Trip</div>
+      <div class="m-file">trip.py</div>
+      <div class="model-item">id, route_name</div>
+      <div class="model-item">origin, destination</div>
+      <div class="model-item">departure_at</div>
+    </div>
+    <div class="model-box">
+      <div class="m-title">Parcel</div>
+      <div class="m-file">parcel.py</div>
+      <div class="model-item">id, tracking_code</div>
+      <div class="model-item">status, fee_rwf</div>
+      <div class="model-item">agent_id, trip_id</div>
+    </div>
+    <div class="model-box">
+      <div class="m-title">ParcelEvent</div>
+      <div class="m-file">parcel_event.py</div>
+      <div class="model-item">id, parcel_id</div>
+      <div class="model-item">event_type, actor_id</div>
+      <div class="model-item">note, created_at</div>
+    </div>
+  </div>
+
+  <div class="arrow">
+    <div class="arrow-label">SQL queries via get_db() session</div>
+    <div class="arrow-line"></div>
+    <div class="arrow-head"></div>
+  </div>
+
+  <!-- DATABASE + DOCS -->
+  <div class="section-label">Infrastructure</div>
+  <div class="db-row">
+
+    <div class="db-box">
+      <div class="d-title">🗄️ database.py</div>
+      <div class="d-file">app/core/database.py</div>
+      <div class="d-item">create_engine(DATABASE_URL)</div>
+      <div class="d-item">SessionLocal → get_db()</div>
+      <div class="d-item">Base → all models inherit</div>
+    </div>
+
+    <div class="db-box">
+      <div class="d-title">🐘 PostgreSQL</div>
+      <div class="d-file">parcel_platform (production)</div>
+      <div class="d-item">agencies</div>
+      <div class="d-item">agents</div>
+      <div class="d-item">trips</div>
+      <div class="d-item">parcels</div>
+      <div class="d-item">parcel_events</div>
+    </div>
+
+    <div class="docs-box">
+      <div class="doc-title">📖 Auto-generated Docs</div>
+      <div class="doc-url">localhost:8000/docs</div>
+      <div class="doc-url">localhost:8000/redoc</div>
+      <div class="doc-url">localhost:8000/openapi.json</div>
+      <br/>
+      <div style="font-size:10px;color:#4a5568;">Built from your schemas + routes<br/>automatically by FastAPI</div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- LEGEND -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#63b3ed"></div> Client</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#48bb78"></div> Entry point (main.py)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#f6ad55"></div> Routers (routes)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#b794f4"></div> Schemas (validation)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#fc8181"></div> Models (database tables)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#667eea"></div> Database layer</div>
+</div>
+
+</body>
+</html>

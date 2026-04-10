@@ -546,3 +546,7 @@ def test_parcel_with_all_fields(db):
     assert parcel.market_agent.name == "Full Market"
     assert parcel.collected_at is not None
     assert parcel.status == ParcelStatus.collected
+
+
+
+# make sure that one agent by can not be registered with two different agency 
