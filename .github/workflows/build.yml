@@ -4,27 +4,28 @@ name: build # name to be visible on the github actions tab
 #triger that starts the pipeline 
 on: 
   push: 
-      branches: [main]
-
+    branches: [main]
+      
 jobs: 
     build: 
-         runs-on: ubuntu-latest 
-              steps: 
-              # pull code from github 
-              - name: Checkout code 
-              Uses: actions/checkout@v3 
-
-              #loggin to docker Hub 
-              - name: login to dockerhub 
-              run: echo "$ {{ sectrets.DOCKER_PASSWORD}}" | docker login -U "${{secrets.DOCKER_USERNAME}}" --password-stdin 
+        runs-on: ubuntu-latest 
               
-              #build the image 
-              - name: build the image 
-              run: docker build -t ${{secrets.DOCKER_USERNAME}}//parcel-platform:latest . 
+        steps: 
+            # pull code from github 
+            - name: Checkout code 
+            Uses: actions/checkout@v3 
 
-              # push the image to the docker hub 
-              - name: push to the docker hub 
-              run: docker push ${{secrets.DOCKER_USERNAME}}/parcel-platform:latest 
+            #loggin to docker Hub 
+            - name: login to dockerhub 
+            run: echo "$ {{ sectrets.DOCKER_PASSWORD}}" | docker login -U "${{secrets.DOCKER_USERNAME}}" --password-stdin 
+              
+            #build the image 
+            - name: build the image 
+            run: docker build -t ${{secrets.DOCKER_USERNAME}}//parcel-platform:latest . 
+
+            # push the image to the docker hub 
+            - name: push to the docker hub 
+            run: docker push ${{secrets.DOCKER_USERNAME}}/parcel-platform:latest 
 
 
 
