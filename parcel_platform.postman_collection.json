@@ -1,0 +1,703 @@
+{
+  "info": {
+    "name": "Parcel Platform API",
+    "description": "Full test suite. Run as a Collection (▶ Runner) so variables are shared across requests. Pre-request scripts generate unique phone numbers and tracking codes each run — no duplicate-key errors.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url",      "value": "http://localhost:8000/api/v1" },
+    { "key": "agency_id",     "value": "" },
+    { "key": "col_agent_id",  "value": "" },
+    { "key": "mkt_agent_id",  "value": "" },
+    { "key": "trip_id",       "value": "" },
+    { "key": "parcel_id",     "value": "" },
+    { "key": "col_phone",     "value": "" },
+    { "key": "mkt_phone",     "value": "" },
+    { "key": "tracking_code", "value": "" }
+  ],
+  "item": [
+
+    {
+      "name": "1. Agencies",
+      "item": [
+
+        {
+          "name": "Create Agency",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/agencies/", "host": ["{{base_url}}"], "path": ["agencies", ""] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Volcano Express\",\n  \"contact_phone\": \"0781000001\",\n  \"contact_email\": \"info@volcano.rw\"\n}"
+            }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('Status is 201',      () => pm.response.to.have.status(201));",
+              "const body = pm.response.json();",
+              "pm.test('Has id',             () => pm.expect(body.id).to.be.a('string'));",
+              "pm.test('active is true',     () => pm.expect(body.active).to.be.true);",
+              "pm.test('created_at is set',  () => pm.expect(body.created_at).to.not.be.null);",
+              "pm.collectionVariables.set('agency_id', body.id);"
+            ]}
+          }]
+        },
+
+        {
+          "name": "List Agencies",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/agencies/", "host": ["{{base_url}}"], "path": ["agencies", ""] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('Status is 200',      () => pm.response.to.have.status(200));",
+              "pm.test('Returns an array',   () => pm.expect(pm.response.json()).to.be.an('array'));",
+              "pm.test('At least 1 result',  () => pm.expect(pm.response.json().length).to.be.at.least(1));"
+            ]}
+          }]
+        },
+
+        {
+          "name": "List Active Agencies Only",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/agencies/?active_only=true",
+              "host": ["{{base_url}}"], "path": ["agencies", ""],
+              "query": [{ "key": "active_only", "value": "true" }]
+            }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('Status is 200',   () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('All are active',  () => body.forEach(a => pm.expect(a.active).to.be.true));"
+            ]}
+          }]
+        },
+
+        {
+          "name": "Get Agency by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/agencies/{{agency_id}}", "host": ["{{base_url}}"], "path": ["agencies", "{{agency_id}}"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('Status is 200',           () => pm.response.to.have.status(200));",
+              "pm.test('Returns correct agency',   () => pm.expect(pm.response.json().id).to.eql(pm.collectionVariables.get('agency_id')));"
+            ]}
+          }]
+        },
+
+        {
+          "name": "Get Agency — 404",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/agencies/nonexistent-id", "host": ["{{base_url}}"], "path": ["agencies", "nonexistent-id"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('Status is 404', () => pm.response.to.have.status(404));"
+            ]}
+          }]
+        },
+
+        {
+          "name": "Deactivate Agency",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{base_url}}/agencies/{{agency_id}}/deactivate", "host": ["{{base_url}}"], "path": ["agencies", "{{agency_id}}", "deactivate"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('Status is 200',    () => pm.response.to.have.status(200));",
+              "pm.test('active is false',  () => pm.expect(pm.response.json().active).to.be.false);"
+            ]}
+          }]
+        },
+
+        {
+          "name": "Delete Agency",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base_url}}/agencies/{{agency_id}}", "host": ["{{base_url}}"], "path": ["agencies", "{{agency_id}}"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('Status is 204', () => pm.response.to.have.status(204));"
+            ]}
+          }]
+        },
+
+        {
+          "name": "Re-create Agency (for remaining tests)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/agencies/", "host": ["{{base_url}}"], "path": ["agencies", ""] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Volcano Express Active\",\n  \"contact_phone\": \"0781000099\",\n  \"contact_email\": \"ops@volcano.rw\"\n}"
+            }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+              "pm.collectionVariables.set('agency_id', pm.response.json().id);"
+            ]}
+          }]
+        }
+
+      ]
+    },
+
+    {
+      "name": "2. Agents",
+      "item": [
+
+        {
+          "name": "Create Collection Agent",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": { "exec": [
+                "// Generate a unique 10-digit phone using timestamp so re-runs never collide",
+                "const ts = Date.now().toString().slice(-7);",
+                "pm.collectionVariables.set('col_phone', '0782' + ts);"
+              ]}
+            },
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status is 201',      () => pm.response.to.have.status(201));",
+                "const body = pm.response.json();",
+                "pm.test('Role is collection', () => pm.expect(body.role).to.eql('collection'));",
+                "pm.test('active is true',     () => pm.expect(body.active).to.be.true);",
+                "pm.collectionVariables.set('col_agent_id', body.id);"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/agents/", "host": ["{{base_url}}"], "path": ["agents", ""] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"agency_id\": \"{{agency_id}}\",\n  \"name\": \"Jean Collector\",\n  \"phone\": \"{{col_phone}}\",\n  \"role\": \"collection\",\n  \"location_name\": \"Kimironko Market\",\n  \"district\": \"Gasabo\"\n}"
+            }
+          }
+        },
+
+        {
+          "name": "Create Market Agent",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": { "exec": [
+                "// Add 1 to ensure a different number from the collection agent",
+                "const ts = (Date.now() + 1).toString().slice(-7);",
+                "pm.collectionVariables.set('mkt_phone', '0783' + ts);"
+              ]}
+            },
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status is 201',   () => pm.response.to.have.status(201));",
+                "const body = pm.response.json();",
+                "pm.test('Role is market',  () => pm.expect(body.role).to.eql('market'));",
+                "pm.collectionVariables.set('mkt_agent_id', body.id);"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/agents/", "host": ["{{base_url}}"], "path": ["agents", ""] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"agency_id\": \"{{agency_id}}\",\n  \"name\": \"Marie Market\",\n  \"phone\": \"{{mkt_phone}}\",\n  \"role\": \"market\",\n  \"location_name\": \"Nyabugogo\",\n  \"district\": \"Nyarugenge\"\n}"
+            }
+          }
+        },
+
+        {
+          "name": "Create Agent — 404 bad agency",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/agents/", "host": ["{{base_url}}"], "path": ["agents", ""] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"agency_id\": \"nonexistent\",\n  \"name\": \"Ghost\",\n  \"phone\": \"0799999999\",\n  \"role\": \"hub\"\n}"
+            }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('Status is 404', () => pm.response.to.have.status(404));"
+            ]}
+          }]
+        },
+
+        {
+          "name": "Create Agent — 409 duplicate phone",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/agents/", "host": ["{{base_url}}"], "path": ["agents", ""] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"agency_id\": \"{{agency_id}}\",\n  \"name\": \"Duplicate\",\n  \"phone\": \"{{col_phone}}\",\n  \"role\": \"hub\"\n}"
+            }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('Status is 409', () => pm.response.to.have.status(409));"
+            ]}
+          }]
+        },
+
+        {
+          "name": "List Agents",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/agents/", "host": ["{{base_url}}"], "path": ["agents", ""] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('Status is 200',    () => pm.response.to.have.status(200));",
+              "pm.test('Returns an array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+            ]}
+          }]
+        },
+
+        {
+          "name": "List Agents — filter by role",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/agents/?role=collection",
+              "host": ["{{base_url}}"], "path": ["agents", ""],
+              "query": [{ "key": "role", "value": "collection" }]
+            }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('All collection', () => body.forEach(a => pm.expect(a.role).to.eql('collection')));"
+            ]}
+          }]
+        },
+
+        {
+          "name": "Get Agent by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/agents/{{col_agent_id}}", "host": ["{{base_url}}"], "path": ["agents", "{{col_agent_id}}"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('Status is 200',           () => pm.response.to.have.status(200));",
+              "pm.test('Returns correct agent',    () => pm.expect(pm.response.json().id).to.eql(pm.collectionVariables.get('col_agent_id')));"
+            ]}
+          }]
+        },
+
+        {
+          "name": "Deactivate Agent",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{base_url}}/agents/{{col_agent_id}}/deactivate", "host": ["{{base_url}}"], "path": ["agents", "{{col_agent_id}}", "deactivate"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('Status is 200',    () => pm.response.to.have.status(200));",
+              "pm.test('active is false',  () => pm.expect(pm.response.json().active).to.be.false);"
+            ]}
+          }]
+        }
+
+      ]
+    },
+
+    {
+      "name": "3. Trips",
+      "item": [
+
+        {
+          "name": "Create Trip",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/trips/", "host": ["{{base_url}}"], "path": ["trips", ""] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"agency_id\": \"{{agency_id}}\",\n  \"route_name\": \"Kigali-Musanze\",\n  \"origin_town\": \"Kigali\",\n  \"destination_town\": \"Musanze\",\n  \"departure_at\": \"2025-06-01T08:00:00+00:00\"\n}"
+            }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('Status is 201',       () => pm.response.to.have.status(201));",
+              "const body = pm.response.json();",
+              "pm.test('route_name saved',    () => pm.expect(body.route_name).to.eql('Kigali-Musanze'));",
+              "pm.test('created_at is set',   () => pm.expect(body.created_at).to.not.be.null);",
+              "pm.collectionVariables.set('trip_id', body.id);"
+            ]}
+          }]
+        },
+
+        {
+          "name": "Create Trip — 404 bad agency",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/trips/", "host": ["{{base_url}}"], "path": ["trips", ""] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"agency_id\": \"nonexistent\",\n  \"route_name\": \"Ghost Route\",\n  \"origin_town\": \"X\",\n  \"destination_town\": \"Y\",\n  \"departure_at\": \"2025-06-01T08:00:00+00:00\"\n}"
+            }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('Status is 404', () => pm.response.to.have.status(404));"
+            ]}
+          }]
+        },
+
+        {
+          "name": "List Trips",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/trips/", "host": ["{{base_url}}"], "path": ["trips", ""] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('Status is 200',    () => pm.response.to.have.status(200));",
+              "pm.test('Returns an array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+            ]}
+          }]
+        },
+
+        {
+          "name": "List Trips — filter by agency",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/trips/?agency_id={{agency_id}}",
+              "host": ["{{base_url}}"], "path": ["trips", ""],
+              "query": [{ "key": "agency_id", "value": "{{agency_id}}" }]
+            }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('All from agency', () => body.forEach(t => pm.expect(t.agency_id).to.eql(pm.collectionVariables.get('agency_id'))));"
+            ]}
+          }]
+        },
+
+        {
+          "name": "Get Trip by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/trips/{{trip_id}}", "host": ["{{base_url}}"], "path": ["trips", "{{trip_id}}"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('Status is 200',         () => pm.response.to.have.status(200));",
+              "pm.test('Returns correct trip',   () => pm.expect(pm.response.json().id).to.eql(pm.collectionVariables.get('trip_id')));"
+            ]}
+          }]
+        },
+
+        {
+          "name": "Delete Trip",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base_url}}/trips/{{trip_id}}", "host": ["{{base_url}}"], "path": ["trips", "{{trip_id}}"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('Status is 204', () => pm.response.to.have.status(204));"
+            ]}
+          }]
+        },
+
+        {
+          "name": "Re-create Trip (for parcel tests)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/trips/", "host": ["{{base_url}}"], "path": ["trips", ""] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"agency_id\": \"{{agency_id}}\",\n  \"route_name\": \"Kigali-Huye\",\n  \"origin_town\": \"Kigali\",\n  \"destination_town\": \"Huye\",\n  \"departure_at\": \"2025-07-01T09:00:00+00:00\"\n}"
+            }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+              "pm.collectionVariables.set('trip_id', pm.response.json().id);"
+            ]}
+          }]
+        }
+
+      ]
+    },
+
+    {
+      "name": "4. Parcels",
+      "item": [
+
+        {
+          "name": "Create Parcel",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": { "exec": [
+                "// Generate a unique tracking code each run using timestamp",
+                "const ts = Date.now().toString().slice(-6);",
+                "pm.collectionVariables.set('tracking_code', 'KGL-' + ts);"
+              ]}
+            },
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status is 201',           () => pm.response.to.have.status(201));",
+                "const body = pm.response.json();",
+                "pm.test('Status is registered',     () => pm.expect(body.status).to.eql('registered'));",
+                "pm.test('tracking_code saved',      () => pm.expect(body.tracking_code).to.eql(pm.collectionVariables.get('tracking_code')));",
+                "pm.test('created_at is set',        () => pm.expect(body.created_at).to.not.be.null);",
+                "pm.collectionVariables.set('parcel_id', body.id);"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/parcels/", "host": ["{{base_url}}"], "path": ["parcels", ""] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tracking_code\": \"{{tracking_code}}\",\n  \"sender_phone\": \"0788000001\",\n  \"receiver_phone\": \"0788000002\",\n  \"description\": \"Fragile electronics\",\n  \"weight_kg\": 1.5,\n  \"fee_rwf\": 2000,\n  \"collection_agent_id\": \"{{col_agent_id}}\",\n  \"market_agent_id\": \"{{mkt_agent_id}}\",\n  \"trip_id\": \"{{trip_id}}\"\n}"
+            }
+          }
+        },
+
+        {
+          "name": "Create Parcel — 409 duplicate tracking code",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/parcels/", "host": ["{{base_url}}"], "path": ["parcels", ""] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tracking_code\": \"{{tracking_code}}\",\n  \"sender_phone\": \"0788000003\",\n  \"receiver_phone\": \"0788000004\",\n  \"fee_rwf\": 1000,\n  \"collection_agent_id\": \"{{col_agent_id}}\"\n}"
+            }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('Status is 409', () => pm.response.to.have.status(409));"
+            ]}
+          }]
+        },
+
+        {
+          "name": "Create Parcel — 404 bad agent",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/parcels/", "host": ["{{base_url}}"], "path": ["parcels", ""] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tracking_code\": \"BAD-00001\",\n  \"sender_phone\": \"0788000099\",\n  \"receiver_phone\": \"0788000098\",\n  \"fee_rwf\": 1000,\n  \"collection_agent_id\": \"nonexistent-agent\"\n}"
+            }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('Status is 404', () => pm.response.to.have.status(404));"
+            ]}
+          }]
+        },
+
+        {
+          "name": "List Parcels",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/parcels/", "host": ["{{base_url}}"], "path": ["parcels", ""] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('Status is 200',    () => pm.response.to.have.status(200));",
+              "pm.test('Returns an array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+            ]}
+          }]
+        },
+
+        {
+          "name": "List Parcels — filter by status",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/parcels/?status=registered",
+              "host": ["{{base_url}}"], "path": ["parcels", ""],
+              "query": [{ "key": "status", "value": "registered" }]
+            }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('All registered', () => body.forEach(p => pm.expect(p.status).to.eql('registered')));"
+            ]}
+          }]
+        },
+
+        {
+          "name": "Track Parcel by Code",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/parcels/track/{{tracking_code}}", "host": ["{{base_url}}"], "path": ["parcels", "track", "{{tracking_code}}"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('Status is 200',         () => pm.response.to.have.status(200));",
+              "pm.test('Correct tracking code',  () => pm.expect(pm.response.json().tracking_code).to.eql(pm.collectionVariables.get('tracking_code')));"
+            ]}
+          }]
+        },
+
+        {
+          "name": "Track Parcel — 404 unknown code",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/parcels/track/UNKNOWN-999", "host": ["{{base_url}}"], "path": ["parcels", "track", "UNKNOWN-999"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('Status is 404', () => pm.response.to.have.status(404));"
+            ]}
+          }]
+        },
+
+        {
+          "name": "Get Parcel by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/parcels/{{parcel_id}}", "host": ["{{base_url}}"], "path": ["parcels", "{{parcel_id}}"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('Status is 200',           () => pm.response.to.have.status(200));",
+              "pm.test('Returns correct parcel',   () => pm.expect(pm.response.json().id).to.eql(pm.collectionVariables.get('parcel_id')));"
+            ]}
+          }]
+        },
+
+        {
+          "name": "Update Status → in_transit",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/parcels/{{parcel_id}}/status", "host": ["{{base_url}}"], "path": ["parcels", "{{parcel_id}}", "status"] },
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"in_transit\"\n}" }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('Status is 200',       () => pm.response.to.have.status(200));",
+              "pm.test('Status in_transit',    () => pm.expect(pm.response.json().status).to.eql('in_transit'));"
+            ]}
+          }]
+        },
+
+        {
+          "name": "Update Status → collected",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/parcels/{{parcel_id}}/status", "host": ["{{base_url}}"], "path": ["parcels", "{{parcel_id}}", "status"] },
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"collected\"\n}" }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('Status is 200',     () => pm.response.to.have.status(200));",
+              "pm.test('Status collected',   () => pm.expect(pm.response.json().status).to.eql('collected'));"
+            ]}
+          }]
+        },
+
+        {
+          "name": "Add Parcel Event (manual note)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/parcels/{{parcel_id}}/events", "host": ["{{base_url}}"], "path": ["parcels", "{{parcel_id}}", "events"] },
+            "body": { "mode": "raw", "raw": "{\n  \"event_type\": \"at_hub\",\n  \"actor_id\": \"{{col_agent_id}}\",\n  \"note\": \"Arrived at Kigali hub\"\n}" }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('Status is 201',    () => pm.response.to.have.status(201));",
+              "const body = pm.response.json();",
+              "pm.test('event_type saved', () => pm.expect(body.event_type).to.eql('at_hub'));",
+              "pm.test('note saved',       () => pm.expect(body.note).to.eql('Arrived at Kigali hub'));"
+            ]}
+          }]
+        },
+
+        {
+          "name": "Get Parcel Event History",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/parcels/{{parcel_id}}/events", "host": ["{{base_url}}"], "path": ["parcels", "{{parcel_id}}", "events"] }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "pm.test('Status is 200',            () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Returns an array',          () => pm.expect(body).to.be.an('array'));",
+              "pm.test('At least 2 events',         () => pm.expect(body.length).to.be.at.least(2));",
+              "pm.test('First event is registered', () => pm.expect(body[0].event_type).to.eql('registered'));"
+            ]}
+          }]
+        }
+
+      ]
+    }
+
+  ]
+}

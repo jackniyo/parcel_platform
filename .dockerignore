@@ -1,0 +1,28 @@
+# Python cache — never needed inside the container
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment — Docker installs its own via requirements.txt
+venv/
+
+# Test files — not needed to run the app
+tests/
+pytest.ini
+.pytest_cache/
+
+# Local environment file — secrets are passed via docker-compose environment
+.env
+
+# Git history — not needed inside the container
+.git/
+.gitignore
+
+# Local dev files
+*.DS_Store
+architecture.html
+parcel_platform.postman_collection.json
+
+#cloude files 
+.claude 
